@@ -1,90 +1,164 @@
-import React from 'react'
+"use client"
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Upload, Home, FileText, Package, Users } from 'lucide-react';
+import InvoiceExtractor from './InvoiceDataExtractionSystem';
 
 const Navbar = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const navItems = [
+    { path: '/invoices', label: 'Invoices', icon: FileText },
+    { path: '/products', label: 'Products', icon: Package },
+    { path: '/customers', label: 'Customers', icon: Users },
+  ];
+
   return (
-    <div>
-      <header className="pb-6 bg-white lg:pb-0">
-    <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-     
-        <nav className="flex items-center justify-between h-16 lg:h-20">
-            <div className="flex-shrink-0 ">
-                <div className='w-full max-w-4xl mx-auto p-8' >
-                  <a href="#" className="flex items-center ">
-      <svg className="w-auto h-12 lg:h-16" viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{stopColor:"#4F46E5"}}/>
-            <stop offset="100%" style={{stopColor:"#7C3AED"}}/>
-          </linearGradient>
-        </defs>
-        
-        <path d="M40 25C40 33.2843 33.2843 40 25 40C16.7157 40 10 33.2843 10 25C10 16.7157 16.7157 10 25 10C33.2843 10 40 16.7157 40 25Z" 
-              fill="url(#gradient1)"/>
-        <path d="M35 25C35 30.5228 30.5228 35 25 35C19.4772 35 15 30.5228 15 25C15 19.4772 19.4772 15 25 15C30.5228 15 35 19.4772 35 25Z" 
-              fill="white"/>
-        <circle cx="25" cy="25" r="7" fill="url(#gradient1)"/>
-        
-        <text x="55" y="32" 
-              fontFamily="Arial, sans-serif" 
-              fontSize="24" 
-              fontWeight="bold" 
-              fill="#1F2937">
-          Swipe
-        </text>
-        <text x="55" y="45" 
-              fontFamily="Arial, sans-serif" 
-              fontSize="12" 
-              fill="#6B7280">
-          Invoice Manager
-        </text>
-      </svg>
-    </a>
-    </div>
-            </div>
+    <header className="bg-black text-white shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="flex items-center justify-between h-20">
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center space-x-2 group">
+              <Home className="w-8 h-8 text-white group-hover:text-gray-300 transition-colors duration-200" />
+              <div>
+                <span className="text-3xl font-extrabold text-white group-hover:text-gray-300 transition-colors duration-200">
+                  Swipe
+                </span>
+                <span className="block text-xs font-medium text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
+                  Invoice Manager
+                </span>
+              </div>
+            </Link>
+          </div>
 
-            <button type="button" class="inline-flex p-2 text-black transition-all duration-200 rounded-md lg:hidden focus:bg-gray-100 hover:bg-gray-100">
-                <svg className="block w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                </svg>
+          <div className="hidden md:flex md:items-center md:space-x-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center space-x-2 text-base font-medium transition-all duration-200 ${
+                  location.pathname === item.path
+                    ? 'text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
 
-                <svg className="hidden w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+          <div className="hidden md:flex md:items-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-full shadow-sm text-black bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+            >
+              <Upload className="w-5 h-5 mr-2" />
+              Upload Invoice
             </button>
+          </div>
 
-            <div className="hidden lg:flex lg:items-center lg:ml-auto lg:space-x-10">
-                <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Invoices </a>
-
-                <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Products </a>
-
-                <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Customers </a>
-
-            </div>
-
-            <a href="#" title="" class="items-center justify-center hidden px-4 py-3 ml-10 text-base font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-md lg:inline-flex hover:bg-blue-700 focus:bg-blue-700" role="button"> Upload Invoice </a>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white transition-all duration-200"
+            >
+              {isMobileMenuOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </nav>
+      </div>
 
-        <nav className="pt-4 pb-6 bg-white border border-gray-200 rounded-md shadow-md lg:hidden">
-            <div className="flow-root">
-                <div class="flex flex-col px-6 -my-2 space-y-1">
-  
-    <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Invoices </a>
+      {/* Mobile menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-gray-900">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === item.path
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                } transition-all duration-200`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+            <button
+              onClick={() => {
+                setIsModalOpen(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className="w-full mt-4 px-4 py-2 flex items-center justify-center text-sm font-medium text-black bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+            >
+              <Upload className="w-5 h-5 mr-2" />
+              Upload Invoice
+            </button>
+          </div>
+        </div>
+      )}
 
-                <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Products </a>
+      {/* Modal */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto" 
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+            onClick={handleCloseModal}
+          />
 
-                <a href="#" title="" class="text-base font-medium text-black transition-all duration-200 hover:text-blue-600 focus:text-blue-600"> Customers </a>
+          {/* Modal */}
+          <div className="flex min-h-screen items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              {/* Header */}
+              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-xl font-semibold leading-6 text-gray-900" id="modal-title">
+                      Upload Invoice
+                    </h3>
+                    <div className="mt-4">
+                      <InvoiceExtractor onSuccess={handleCloseModal} />
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Footer */}
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                >
+                  Close
+                </button>
+              </div>
             </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
 
-            <div className="px-6 mt-6">
-                <a href="#" title="" class="inline-flex justify-center px-4 py-3 text-base font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-md tems-center hover:bg-blue-700 focus:bg-blue-700" role="button"> Upload Invoice </a>
-            </div>
-        </nav>
-    </div>
-</header>
-
-    </div>
-  )
-}
-
-export default Navbar
+export default Navbar;
