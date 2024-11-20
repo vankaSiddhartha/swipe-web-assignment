@@ -14,7 +14,7 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { path: '/invoices', label: 'Invoices', icon: FileText },
+    { path: '/', label: 'Invoices', icon: FileText },
     { path: '/products', label: 'Products', icon: Package },
     { path: '/customers', label: 'Customers', icon: Users },
   ];

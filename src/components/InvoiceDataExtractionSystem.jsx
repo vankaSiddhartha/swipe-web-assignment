@@ -145,6 +145,7 @@ class InvoiceProcessor {
             taxAmount: row.taxAmount || row["Tax Amount"] || row["Tax (%)"]|| "Unknown",
             totalAmount: row.totalAmount || row["Item Total Amount"] ||row["Net Amount"]|| row["Price with Tax"] ||"Unknown",
             date: row.date || row["Invoice Date"] || row["Date"]|| "Unknown",
+            phoneNumber:row.phoneNumber||row["Phone Number"]||"Unknow"
         });
     }
 
@@ -166,6 +167,7 @@ class InvoiceProcessor {
       - Tax Amount
       - Total Amount
       - Date
+      -Phone Number
 
       Provide JSON output in the format:
       {
@@ -174,7 +176,8 @@ class InvoiceProcessor {
         "products": [{"name": "", "quantity": 0}],
         "taxAmount": 0,
         "totalAmount": 0,
-        "date": ""
+        "date": "",
+        "phoneNumber"
       }
     `;
 

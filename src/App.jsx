@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
+import ProductDetails from './pages/Product';
 
 function App() {
   return (
@@ -18,6 +19,15 @@ function App() {
             </>
           }
         />
+        <Route
+        path='/products'
+         element={
+            <>
+              <ProductDetails />
+              {/* Add other components if needed */}
+            </>
+          }
+          />
         {/* Add more routes here as needed */}
       </Routes>
     </Router>
