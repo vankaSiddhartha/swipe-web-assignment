@@ -7,7 +7,7 @@ import { setInvoices, addInvoice, updateInvoice, deleteInvoice } from '../action
 const CHUNK_SIZE = 5;
 const MAX_RETRIES = 3;
 const genAI = new GoogleGenerativeAI('AIzaSyBDNSRlJ1MnWr1k5L_ClBiSJsoaLXxkrU0');
-
+var fileTYPE = "";
 class InvoiceProcessor {
     
   constructor() {
@@ -57,7 +57,9 @@ class InvoiceProcessor {
 
   async processFileWithRetry(file, retryCount = 0) {
     try {
+
       const fileType = this.getFileType(file);
+      fileTYPE = fileType
       console.log(`Processing ${file.name} as ${fileType}, attempt ${retryCount + 1}`);
       return await this.extractData(file, fileType);
     } catch (error) {
@@ -117,10 +119,39 @@ class InvoiceProcessor {
     const workbook = XLSX.read(arrayBuffer);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-    console.log("Excel data converted to JSON:", jsonData);
 
-    return await this.extractInvoiceData(JSON.stringify(jsonData));
-  }
+    const filteredData = [];
+
+    for (const row of jsonData) {
+        const serialNumber = row.serialNumber || row["Serial Number"] || null;
+        if (!serialNumber || serialNumber === "Totals") {
+            break; // Skip rows without a serial number or totals row
+        }
+
+        // Map product details into the products array
+        const products = [
+            {
+                name: row.products || row["Product Name"] || "",
+                quantity: row["Qty"] || 1,
+       
+            }
+        ];
+
+        // Map the rest of the row data
+        filteredData.push({
+            serialNumber: serialNumber,
+            customerName: row.customerName || row["Party Company Name"] || "Unknown",
+            products: products,
+            taxAmount: row.taxAmount || row["Tax Amount"] || row["Tax (%)"]|| "Unknown",
+            totalAmount: row.totalAmount || row["Item Total Amount"] ||row["Net Amount"]|| row["Price with Tax"] ||"Unknown",
+            date: row.date || row["Invoice Date"] || row["Date"]|| "Unknown",
+        });
+    }
+
+    console.log("Filtered Excel data:", filteredData);
+    return filteredData; // Return only filtered rows
+}
+
 
   async processPDF(file) {
     console.log(`Processing PDF file: ${file.name}`);
@@ -280,9 +311,10 @@ const InvoiceExtractor = () => {
     await processFiles(files);
   };
 
- const processFiles = async (files) => {
+const processFiles = async (files) => {
+
     if (files.length === 0) return;
-    console.log("Starting to process files:", files.map(f => f.name));
+    console.log("Starting to process files:", files.map((f) => f.name));
 
     setProcessing(true);
     setProgress(0);
@@ -290,33 +322,53 @@ const InvoiceExtractor = () => {
     setResults([]);
 
     try {
-      const processor = new InvoiceProcessor();
-      console.log("Created InvoiceProcessor instance");
-      
-      const processedResults = await processor.processFiles(files, handleProgress);
-      console.log("Processed results:", processedResults);
-      
-      setResults(processedResults);
-      
-      // Filter successful results and add them to Redux one by one
-      const successfulResults = processedResults.filter(result => result.status === 'success');
-      console.log("Successful results to dispatch:", successfulResults);
-      
-      // Instead of using setInvoices, use addInvoice for each new invoice
-      successfulResults.forEach(result => {
-        dispatch(addInvoice(result.data));
-      });
-      
-      console.log("Successfully dispatched to Redux store");
-      
+        const processor = new InvoiceProcessor();
+        console.log("Created InvoiceProcessor instance");
+
+        const processedResults = await processor.processFiles(files, handleProgress);
+        console.log("Processed results:", processedResults);
+
+        setResults(processedResults);
+
+        // // Filter successful results and handle them based on file type
+        const successfulResults = processedResults.filter(
+            (result) => result.status === "success"
+        );
+        // console.log("Successful results to dispatch:", successfulResults);
+  // const fileType = file.name.split('.').pop().toLowerCase(); // Get file extension
+
+    // List of supported Excel file extensions
+    const excelExtensions = ['xls', 'xlsx', 'xlsm', 'xlsb'];
+        successfulResults.forEach((result) => {
+            if (fileTYPE === "excel") {
+              alert("ue")
+                // Excel-specific handling: extract and dispatch filtered rows
+                if (Array.isArray(result.data)) {
+                    result.data.forEach((row) => {
+                      console.log(row)
+                        dispatch(addInvoice(row)); // Dispatch filtered rows for Excel
+                    });
+                } else {
+                    console.error("Expected array of rows but got:", result.data);
+                }
+            } else {
+                alert(fileTYPE)
+                // Handle other file types (e.g., JSON, text)
+                dispatch(addInvoice(result.data)); // Dispatch the entire data for non-Excel files
+            }
+        });
+
+        console.log("Successfully dispatched all files to Redux store");
+
     } catch (error) {
-      console.error("Error processing files:", error);
-      setError(error.message);
+        console.error("Error processing files:", error);
+        setError(error.message);
     } finally {
-      setProcessing(false);
-      console.log("Finished processing files");
+        setProcessing(false);
+        console.log("Finished processing files");
     }
-  };
+};
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -386,7 +438,7 @@ const InvoiceExtractor = () => {
           </div>
         )}
 
-        {results.length > 0 && (
+        {/* {results.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Results</h3>
             <div className="space-y-4">
@@ -422,7 +474,7 @@ const InvoiceExtractor = () => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
