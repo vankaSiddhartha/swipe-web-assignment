@@ -170,12 +170,12 @@ class InvoiceProcessor {
         // Map the rest of the row data
         filteredData.push({
             serialNumber: serialNumber,
-            customerName: row.customerName || row["Party Company Name"] || "Unknown",
+            customerName: row.customerName || row["Party Company Name"] || "missing",
             products: products,
-            taxAmount: row.taxAmount || row["Tax Amount"] || row["Tax (%)"]|| "Unknown",
-            totalAmount: row.totalAmount || row["Item Total Amount"] ||row["Net Amount"]|| row["Price with Tax"] ||"Unknown",
-            date: row.date || row["Invoice Date"] || row["Date"]|| "Unknown",
-            phoneNumber:row.phoneNumber||row["Phone Number"]||"Unknow"
+            taxAmount: row.taxAmount || row["Tax Amount"] || row["Tax (%)"]|| "missing",
+            totalAmount: row.totalAmount || row["Item Total Amount"] ||row["Net Amount"]|| row["Price with Tax"] ||"missing",
+            date: row.date || row["Invoice Date"] || row["Date"]|| "missing",
+            phoneNumber:row.phoneNumber||row["Phone Number"]||"missing"
         });
     }
 
