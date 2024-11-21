@@ -6,7 +6,10 @@ import { setInvoices, addInvoice, updateInvoice, deleteInvoice } from '../action
 
 const CHUNK_SIZE = 5;
 const MAX_RETRIES = 3;
-const genAI = new GoogleGenerativeAI('AIzaSyBpPeX3slD7832Urhw7d3pLGX7P9XuzqFA');
+const apiKey = import.meta.env.VITE_LLM_API_KEY;
+
+console.log(apiKey)
+const genAI = new GoogleGenerativeAI(apiKey);
 var fileTYPE = "";
 var loadText = ""
 const LoadingProgress = ({ progress, text }) => {
