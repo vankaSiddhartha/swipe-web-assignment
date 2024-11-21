@@ -3,10 +3,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as XLSX from 'xlsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { setInvoices, addInvoice, updateInvoice, deleteInvoice } from '../actions/invoiceActions';
+import { piConfig } from '../config/apiConfig';
+
 
 const CHUNK_SIZE = 5;
 const MAX_RETRIES = 3;
-const apiKey = import.meta.env.VITE_LLM_API_KEY;
+const apiKey = piConfig.apiKey;
 
 const genAI = new GoogleGenerativeAI(apiKey);
 var fileTYPE = "";
