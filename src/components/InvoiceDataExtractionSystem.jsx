@@ -8,7 +8,6 @@ const CHUNK_SIZE = 5;
 const MAX_RETRIES = 3;
 const apiKey = import.meta.env.VITE_LLM_API_KEY;
 
-console.log(apiKey)
 const genAI = new GoogleGenerativeAI(apiKey);
 var fileTYPE = "";
 var loadText = ""
