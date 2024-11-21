@@ -6,8 +6,25 @@ import { setInvoices, addInvoice, updateInvoice, deleteInvoice } from '../action
 
 const CHUNK_SIZE = 5;
 const MAX_RETRIES = 3;
-const genAI = new GoogleGenerativeAI('AIzaSyBDNSRlJ1MnWr1k5L_ClBiSJsoaLXxkrU0');
+const genAI = new GoogleGenerativeAI('AIzaSyBpPeX3slD7832Urhw7d3pLGX7P9XuzqFA');
 var fileTYPE = "";
+var loadText = ""
+const LoadingProgress = ({ progress, text }) => {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-blue-100 border-t-4 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+      <div className="text-center">
+        <p className="text-sm text-gray-600">
+          { 'Processing...'}
+        </p>
+    
+      </div>
+    </div>
+  );
+};
+
 class InvoiceProcessor {
     
   constructor() {
@@ -18,12 +35,14 @@ class InvoiceProcessor {
 
   async processFiles(files, onProgress) {
     console.log(`Starting to process ${files.length} files in chunks of ${CHUNK_SIZE}`);
+    loadText = "Starting.."
     const results = [];
     const chunks = this.chunkArray(files, CHUNK_SIZE);
     let processedFiles = 0;
 
     for (const chunk of chunks) {
       console.log(`Processing chunk of ${chunk.length} files`);
+      loadText = "Processing chunk"
       const chunkPromises = chunk.map(file => this.processFileWithRetry(file));
       const chunkResults = await Promise.allSettled(chunkPromises);
 
@@ -31,10 +50,12 @@ class InvoiceProcessor {
         processedFiles++;
         const progress = (processedFiles / files.length) * 100;
         console.log(`Progress: ${progress.toFixed(2)}%`);
+  
         onProgress(progress);
 
         if (result.status === 'fulfilled') {
           console.log(`Successfully processed ${chunk[index].name}`);
+          loadText = "Successfully processed "
           results.push({
             fileName: chunk[index].name,
             data: result.value,
@@ -52,6 +73,7 @@ class InvoiceProcessor {
     }
 
     console.log("Finished processing all files", results);
+    loadText = "Finished processing all files"
     return results;
   }
 
@@ -61,6 +83,7 @@ class InvoiceProcessor {
       const fileType = this.getFileType(file);
       fileTYPE = fileType
       console.log(`Processing ${file.name} as ${fileType}, attempt ${retryCount + 1}`);
+      loadText = `Processing ${file.name} as ${fileType}, attempt ${retryCount + 1}`
       return await this.extractData(file, fileType);
     } catch (error) {
       console.error(`Error processing ${file.name}, attempt ${retryCount + 1}:`, error);
@@ -84,6 +107,7 @@ class InvoiceProcessor {
   getFileType(file) {
     const extension = file.name.split('.').pop().toLowerCase();
     console.log(`Determining file type for ${file.name}: ${extension}`);
+    loadText  = "`Determining file type for ${file.name}: ${extension}`"
     switch (extension) {
       case 'xlsx':
       case 'xls':
@@ -101,6 +125,7 @@ class InvoiceProcessor {
 
   async extractData(file, fileType) {
     console.log(`Extracting data from ${fileType} file: ${file.name}`);
+    loadText = "`Extracting data from ${fileType} file: ${file.name}`"
     switch (fileType) {
       case 'excel':
         return await this.processExcel(file);
@@ -115,6 +140,7 @@ class InvoiceProcessor {
 
   async processExcel(file) {
     console.log(`Processing Excel file: ${file.name}`);
+    loadText = `Processing Excel file: ${file.name}`
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -177,7 +203,7 @@ class InvoiceProcessor {
         "taxAmount": 0,
         "totalAmount": 0,
         "date": "",
-        "phoneNumber"
+        "phoneNumber:"",
       }
     `;
 
@@ -204,7 +230,8 @@ class InvoiceProcessor {
         "products": [{"name": "", "quantity": 0}],
         "taxAmount": 0,
         "totalAmount": 0,
-        "date": ""
+        "date": "",
+        phoneNumber:"",
       }
     `;
 
@@ -230,6 +257,7 @@ class InvoiceProcessor {
       - Tax Amount
       - Total Amount
       - Date
+      -Phone Number
       
       Content: ${content}
     `;
@@ -282,6 +310,7 @@ const InvoiceExtractor = () => {
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const invoices = useSelector(state => state.invoices);
 
   const handleProgress = (progressValue) => {
@@ -314,8 +343,7 @@ const InvoiceExtractor = () => {
     await processFiles(files);
   };
 
-const processFiles = async (files) => {
-
+  const processFiles = async (files) => {
     if (files.length === 0) return;
     console.log("Starting to process files:", files.map((f) => f.name));
 
@@ -323,55 +351,50 @@ const processFiles = async (files) => {
     setProgress(0);
     setError(null);
     setResults([]);
+    setCompleted(false);
 
     try {
-        const processor = new InvoiceProcessor();
-        console.log("Created InvoiceProcessor instance");
+      const processor = new InvoiceProcessor();
+      console.log("Created InvoiceProcessor instance");
 
-        const processedResults = await processor.processFiles(files, handleProgress);
-        console.log("Processed results:", processedResults);
+      const processedResults = await processor.processFiles(files, handleProgress);
+      console.log("Processed results:", processedResults);
 
-        setResults(processedResults);
+      setResults(processedResults);
 
-        // // Filter successful results and handle them based on file type
-        const successfulResults = processedResults.filter(
-            (result) => result.status === "success"
-        );
-        // console.log("Successful results to dispatch:", successfulResults);
-  // const fileType = file.name.split('.').pop().toLowerCase(); // Get file extension
+      // Filter successful results and handle them based on file type
+      const successfulResults = processedResults.filter(
+        (result) => result.status === "success"
+      );
 
-    // List of supported Excel file extensions
-    const excelExtensions = ['xls', 'xlsx', 'xlsm', 'xlsb'];
-        successfulResults.forEach((result) => {
-            if (fileTYPE === "excel") {
-              alert("ue")
-                // Excel-specific handling: extract and dispatch filtered rows
-                if (Array.isArray(result.data)) {
-                    result.data.forEach((row) => {
-                      console.log(row)
-                        dispatch(addInvoice(row)); // Dispatch filtered rows for Excel
-                    });
-                } else {
-                    console.error("Expected array of rows but got:", result.data);
-                }
-            } else {
-                alert(fileTYPE)
-                // Handle other file types (e.g., JSON, text)
-                dispatch(addInvoice(result.data)); // Dispatch the entire data for non-Excel files
-            }
-        });
+      successfulResults.forEach((result) => {
+        if (fileTYPE === "excel") {
+          // Excel-specific handling: extract and dispatch filtered rows
+          if (Array.isArray(result.data)) {
+            result.data.forEach((row) => {
+              console.log(row);
+              dispatch(addInvoice(row)); // Dispatch filtered rows for Excel
+            });
+          } else {
+            console.error("Expected array of rows but got:", result.data);
+          }
+        } else {
+          // Handle other file types (e.g., JSON, text)
+          dispatch(addInvoice(result.data)); // Dispatch the entire data for non-Excel files
+        }
+      });
 
-        console.log("Successfully dispatched all files to Redux store");
+      console.log("Successfully dispatched all files to Redux store");
+      setCompleted(true);
 
     } catch (error) {
-        console.error("Error processing files:", error);
-        setError(error.message);
+      console.error("Error processing files:", error);
+      setError(error.message);
     } finally {
-        setProcessing(false);
-        console.log("Finished processing files");
+      setProcessing(false);
+      console.log("Finished processing files");
     }
-};
-
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -413,16 +436,24 @@ const processFiles = async (files) => {
         </div>
 
         {processing && (
-          <div className="space-y-2">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
+          <LoadingProgress 
+            progress={progress} 
+            text={"loading..."}
+          />
+        )}
+
+        {completed && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">Extraction completed successfully!</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 text-center">
-              Processing files... {Math.round(progress)}%
-            </p>
           </div>
         )}
 
@@ -440,44 +471,6 @@ const processFiles = async (files) => {
             </div>
           </div>
         )}
-
-        {/* {results.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Results</h3>
-            <div className="space-y-4">
-              {results.map((result, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    {result.fileName}
-                  </h4>
-                  {result.status === 'success' ? (
-                    <div className="mt-2 space-y-2">
-                      <p>Invoice Number: {result.data.serialNumber}</p>
-                      <p>Customer: {result.data.customerName}</p>
-                      <p>Date: {result.data.date}</p>
-                      <p>Total Amount: ${result.data.totalAmount}</p>
-                      <div>
-                        <p className="font-medium">Products:</p>
-                        <ul className="list-disc list-inside">
-                          {result.data.products.map((product, idx) => (
-                            <li key={idx}>
-                              {product.name} (Qty: {product.quantity})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-red-500 mt-2">Error: {result.error}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )} */}
       </div>
     </div>
   );
