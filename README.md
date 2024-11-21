@@ -94,7 +94,7 @@ For each test case, the app extracts Invoice, Product, and Customer details and 
 
 ## Deployment
 
-The app is deployed on **[Vercel/Netlify](Link to Deployment)**. You can access it [here](https://swipe-web-assignment.vercel.app/).
+The app is deployed on Vercel. You can access it [here](https://swipe-web-assignment.vercel.app/).
 
 
 
